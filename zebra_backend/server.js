@@ -4,11 +4,18 @@ const bodyParser = require('body-parser');
 const app = express()
 const port = 5000
 
-if(!argv.key) {
-    console.log('Please specify a Stripe API key when running: --key=<key_here>');
+console.log("Zebra API server initializing...\n");
 
+if(!argv.key) {
+    console.log("Stripe API key is required to run this server");
+    console.log("To specify, when running: --key=<key_here>");
     // Quit with invalid process exit code
     process.exit(9);
+}
+
+if(!argv.endpoint_secret) {
+    console.log("No endpoint secret specified, skipping webhook signature check");
+    console.log("To specifiy, when running: --endpoint_secret=<secret>");
 }
 
 // Set your secret key. Remember to switch to your live secret key in production!
@@ -17,8 +24,7 @@ if(!argv.key) {
 const stripe = require('stripe')(argv.key);
 
 app.get('/', (req, res) => res.send('What\'re you looking at this? This is an API server!'))
-
-app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
+app.listen(port, () => console.log(`\nServer running at http://localhost:${port}`))
 
 app.get('/api/secret', async(req, res) => {
     const intent = await stripe.paymentIntents.create({
@@ -34,12 +40,25 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
     console.log("webhook received");
     
     let event;
-
-    try {
-        event = JSON.parse(req.body);
-    } catch (err) {
-        res.status(400).send(`Webhook Error: ${err.message}`);
+    if(argv.endpoint_secret) {
+        console.log("checking webhook signature");
+        const sig = req.headers['stripe-signature'];
+        try {
+            event = stripe.webhooks.constructEvent(req.body, sig, argv.endpoint_secret);
+        }
+        catch (err) {
+            console.log("webhook error");
+            res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+    } else {
+        try {
+            event = JSON.parse(request.body);
+          } catch (err) {
+            response.status(400).send(`Webhook Error: ${err.message}`);
+          }
     }
+
+
     
     console.log("Event type: " + event.type);
 
