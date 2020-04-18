@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "zebra_frontend"
+		},
+		{
+			"path": "zebra_backend"
+		}
+	],
+	"settings": {}
+}
