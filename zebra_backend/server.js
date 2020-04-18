@@ -1,4 +1,5 @@
 const argv = require('yargs').argv;
+const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express()
@@ -17,6 +18,15 @@ if(!argv.endpoint_secret) {
     console.log("No endpoint secret specified, skipping webhook signature check");
     console.log("To specifiy, when running: --endpoint_secret=<secret>");
 }
+
+// Create logs directory if it doesn't exist yet
+if(!fs.existsSync('./logs')) {
+    fs.mkdirSync('./logs');
+    console.log("Created logs directory");
+}
+
+// Open transaction log stream, by default stream will close when process terminates
+const logStream = fs.createWriteStream('./logs/transactions.txt', {flags: 'a'});
 
 // Set your secret key. Remember to switch to your live secret key in production!
 // See your keys here: https://dashboard.stripe.com/account/apikeys
@@ -61,6 +71,9 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
 
     
     console.log("Event type: " + event.type);
+
+    
+    logStream.write("Incoming webhook, event type is: " + event.type + '\n');
 
     // Handle the event
     switch (event.type) {
