@@ -1,7 +1,5 @@
 import React from 'react';
 import {useStripe, useElements, CardElement} from '@stripe/react-stripe-js';
-import StripeCardElement from '@stripe/stripe-js';
-
 import CardSection from './CardSection';
 
 export default function CheckoutForm() {

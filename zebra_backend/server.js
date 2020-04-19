@@ -20,7 +20,7 @@ const stripe = require('stripe')(argv.key);
 const transactionLog = initializeTransactionLog();
 
 // GET endpoint to retrieve the deal of the day
-app.get('/api/deal_of_the_day', function(req, res) {
+app.get('/api/dotd', function(req, res) {
     res.json({name: dotdName,
               description: dotdDescription,
               image_url: dotdImageURL,
