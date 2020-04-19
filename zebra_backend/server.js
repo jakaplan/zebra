@@ -2,50 +2,45 @@ const argv = require('yargs').argv;
 const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express()
-const port = 5000
+const app = express();
+const port = 5000;
 
-console.log("Zebra API server initializing...\n");
+// Deal of the day (values hardcoded for demo)
+const dotdName = 'Candy Cane';
+const dotdDescription = 'Peppermint flavored Christmas treat with white and red stripes';
+const dotdImageURL = 'https://upload.wikimedia.org/wikipedia/commons/d/de/Candy-Cane-Classic.jpg';
+const dotdPrice = 249;
+const dotdCurrency = 'usd';
 
-if(!argv.key) {
-    console.log("Stripe API key is required to run this server");
-    console.log("To specify, when running: --key=<key_here>");
-    // Quit with invalid process exit code
-    process.exit(9);
-}
-
-if(!argv.endpoint_secret) {
-    console.log("No endpoint secret specified, skipping webhook signature check");
-    console.log("To specifiy, when running: --endpoint_secret=<secret>");
-}
-
-// Create logs directory if it doesn't exist yet
-if(!fs.existsSync('./logs')) {
-    fs.mkdirSync('./logs');
-    console.log("Created logs directory");
-}
-
-// Open transaction log stream, by default stream will close when process terminates
-const logStream = fs.createWriteStream('./logs/transactions.txt', {flags: 'a'});
-
-// Set your secret key. Remember to switch to your live secret key in production!
-// See your keys here: https://dashboard.stripe.com/account/apikeys
-// Key = sk_test_KdE2iNsDxi481yEX9aO4KkQr00aSeeoINj
+// Initialization
+printServerStartupMessage();
+checkCommandLineArgs();
+app.listen(port, () => console.log(`API server now running at http://localhost:${port}`))
 const stripe = require('stripe')(argv.key);
+const transactionLog = initializeTransactionLog();
 
-app.get('/', (req, res) => res.send('What\'re you looking at this? This is an API server!'))
-app.listen(port, () => console.log(`\nServer running at http://localhost:${port}`))
+// GET endpoint to retrieve the deal of the day
+app.get('/api/deal_of_the_day', function(req, res) {
+    res.json({name: dotdName,
+              description: dotdDescription,
+              image_url: dotdImageURL,
+              price: dotdPrice,
+              currency: dotdCurrency});
+});
 
+// GET endpoint called by web client to retrieve Stripe client secret
 app.get('/api/secret', async(req, res) => {
     const intent = await stripe.paymentIntents.create({
-        amount: 1099,
-        currency: 'usd',
+        amount: dotdPrice,
+        currency: dotdCurrency,
+        
         // Verify your integration in this guide by including this parameter
-        metadata: {integration_check: 'accept_a_payment'},
+        //metadata: {integration_check: 'accept_a_payment'},
       });
     res.json({client_secret: intent.client_secret});
 });
 
+// POST endpoint for webhook called by Stripe servers
 app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
     console.log("webhook received");
     
@@ -73,7 +68,7 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
     console.log("Event type: " + event.type);
 
     
-    logStream.write("Incoming webhook, event type is: " + event.type + '\n');
+    transactionLog.write("Incoming webhook, event type is: " + event.type + '\n');
 
     // Handle the event
     switch (event.type) {
@@ -99,3 +94,54 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
     //console.log(req);
     //res.status(200).end()
 })
+
+function printServerStartupMessage() {
+    let zebra = "                                       \n\
+                                888                     \n\
+                                888                     \n\
+                                888                     \n\
+                88888888 .d88b. 88888b. 888d888 8888b.  \n\
+                   d88P d8P  Y8b888 \"88b888P\"      \"88b \n\
+                  d88P  88888888888  888888    .d888888 \n\
+                 d88P   Y8b.    888 d88P888    888  888 \n\
+                88888888 \"Y8888 88888P\" 888    \"Y888888 \n\n";
+            
+    console.log(zebra);
+    console.log("                            Initializing...\n");
+}
+
+function checkCommandLineArgs() {
+    // Check for mandatory Stripe API key
+    // When running in production this should be the live secret
+    if(!argv.key) {
+        console.log("🛑 Stripe API key is required to run this server");
+        console.log("API keys can be seen at https://dashboard.stripe.com/account/apikeys");
+        console.log("To specify, when running: --key=<key_here>");
+
+        // Quit with invalid process exit code
+        process.exit(9);
+    }
+    
+    // Check for optional endpoint secret
+    if(!argv.endpoint_secret) {
+        console.log("⚠️  No endpoint secret specified, skipping webhook signature check");
+        console.log("To specifiy, when running: --endpoint_secret=<secret>");
+    }
+}
+
+function initializeTransactionLog() {
+    // Create logs directory if it doesn't exist yet
+    if(!fs.existsSync('./logs')) {
+        fs.mkdirSync('./logs');
+        console.log("Created logs directory");
+    }
+
+    // Open transaction log stream, by default stream will close when process terminates
+    logStream = fs.createWriteStream('./logs/transactions.txt', {flags: 'a'});
+
+    return logStream;
+}
+
+function recordTransaction() {
+    //TODO
+}
