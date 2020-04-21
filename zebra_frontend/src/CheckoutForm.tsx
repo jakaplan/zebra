@@ -69,19 +69,29 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
                       email: '',
                       address: '',
                       city: '',
-                      state: ''};
+                      state: 'California'};
         this.processSubmission = this.processSubmission.bind(this);
         this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     /**
-     * Async returns the client secret from the server for the deal of the day.
+     * Async sends payment information not including credit card info and returns
+     * the client secret from the server for the deal of the day item.
      * 
      * @returns client secret
      * @throws if non-200 status code is returned by server
      */
     async fetchClientSecret(): Promise<string> {
-        let response: Response = await fetch('/api/secret');
+        let response = await fetch('/api/begin_payment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: this.state.name,
+                email: this.state.email,
+                address: this.state.address,
+                city: this.state.city,
+                state: this.state.state })
+        });
         if(response.status === 200) {
             return (await response.json())['client_secret'];
         } else {
@@ -110,8 +120,6 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
 
                     try {
                         let clientSecret = await this.fetchClientSecret();
-
-                        console.log("clientSecret received");
 
                         const result = await this.props.stripe.confirmCardPayment(clientSecret, {
                             payment_method: {
@@ -162,6 +170,19 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
         }
     }
 
+
+
+    /**
+     * Catch all error when something goes wrong in processing the payment
+     */
+    setGenericPaymentFailure() {
+        this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                       errorMessage: DEFAULT_ERROR_MESSAGE});
+    }
+
+    /**
+     * Check all non-payment fields have been filled out
+     */
     validateInput(): boolean {
         let allInputsPassedValidation = true;
 
@@ -187,7 +208,7 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
         }
         else if(!this.state.state) {
             this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
-                           errorMessage: "Please provide your city"});
+                           errorMessage: "Please provide your state"});
             allInputsPassedValidation = false;
         }
 
@@ -195,38 +216,27 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
     }
 
     /**
-     * Catch all error when something goes wrong in processing the payment
-     */
-    setGenericPaymentFailure() {
-        this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
-                       errorMessage: DEFAULT_ERROR_MESSAGE});
-    }
-
-    /**
      * Updates React's state based on what's been input into the input fields
      */
     handleInputChange(event: React.FormEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) {
-        console.log(event.currentTarget);
-
         const name = event.currentTarget.name;
         const value = event.currentTarget.value;
-
         switch(name) {
             case 'name':
                 this.setState({name: value});
                 break;
             case 'email':
-                    this.setState({email: value});
-                    break;
+                this.setState({email: value});
+                break;
             case 'address':
-                    this.setState({address: value});
-                    break;
+                this.setState({address: value});
+                break;
             case 'city':
-                    this.setState({city: value});
-                    break;
+                this.setState({city: value});
+                break;
             case 'state':
-                    this.setState({state: value});
-                    break;
+                this.setState({state: value});
+                break;
         }
     }
 
@@ -234,9 +244,6 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
      * Renders the UI for this component
      */
     render() {
-        console.log("Submission Status: " + this.state.submissionStatus);
-        //console.log("Name: " + this.state.name);
-
         // If Stripe.JS hasn't initialized yet, don't show any payment UI
         if(!this.props.stripe || !this.props.elements) {
             console.log("render :: Stripe.JS hasn't initialized yet")

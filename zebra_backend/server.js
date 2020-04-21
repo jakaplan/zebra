@@ -28,17 +28,29 @@ app.get('/api/dotd', function(req, res) {
               currency: dotdCurrency});
 });
 
-// GET endpoint called by web client to retrieve Stripe client secret
-app.get('/api/secret', async(req, res) => {
+// POST endpoint called by client to provide payment info excluding credit card info
+// and get returned Stripe client secret
+app.post('/api/begin_payment', bodyParser.raw({type: 'application/json'}), async(req, res) => {
+    let paymentInfo = JSON.parse(req.body);
+
+    let name = paymentInfo['name'];
+    let email = paymentInfo['email'];
+    let address = paymentInfo['address'];
+    let city = paymentInfo['city'];
+    let state = paymentInfo['state'];
+
+    console.log(name + " :: " + email + " :: " + address + " :: " + city + " :: " + state);
+
+    // Return client secret
     const intent = await stripe.paymentIntents.create({
         amount: dotdPrice,
         currency: dotdCurrency,
-        
-        // Verify your integration in this guide by including this parameter
-        //metadata: {integration_check: 'accept_a_payment'},
-      });
+    });
+
+    console.log("intent created, client_secret: " + intent.client_secret);
+
     res.json({client_secret: intent.client_secret});
-});
+})
 
 // POST endpoint for webhook called by Stripe servers
 app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
@@ -57,15 +69,30 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
         }
     } else {
         try {
-            event = JSON.parse(request.body);
+            event = JSON.parse(req.body);
           } catch (err) {
-            response.status(400).send(`Webhook Error: ${err.message}`);
+            res.status(400).send(`Webhook Error: ${err.message}`);
           }
     }
 
+    // If a succesful payment occurred, record it in the transaction log
+    if(event.type === 'payment_intent.succeeded') {
+        console.log('payment_intent.succeeded');
+        //console.log(event);
 
-    
+
+        let client_secret = event.data.object.client_secret;
+        console.log("client_secret: " + event.data.object.client_secret);
+
+    }
+
+
+    // Return a response to acknowledge receipt of the event
+    res.json({received: true});
+
+    /*
     console.log("Event type: " + event.type);
+    console.log(event);
 
     
     transactionLog.write("Incoming webhook, event type is: " + event.type + '\n');
@@ -87,9 +114,8 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
         // Unexpected event type
         return res.status(400).end();
     }
+    */
 
-    // Return a response to acknowledge receipt of the event
-    res.json({received: true});
 
     //console.log(req);
     //res.status(200).end()
