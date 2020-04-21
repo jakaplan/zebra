@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import './App.css';
 import BuyNowButton from './BuyNowButton';
 import CheckoutForm from './CheckoutForm';
@@ -8,7 +8,7 @@ interface AppState {
   showCheckoutForm: boolean;
 }
 
-class App extends React.Component<{}, AppState> {
+class App extends Component<{}, AppState> {
   constructor(props: {}) {
     super(props);
 

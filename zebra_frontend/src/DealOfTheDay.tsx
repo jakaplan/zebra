@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 
 interface DealOfTheDay {
     name: string;
@@ -8,7 +8,7 @@ interface DealOfTheDay {
     currency: string;
 }
 
-class DealOfTheDay extends React.Component<{}, DealOfTheDay> {
+class DealOfTheDay extends Component<{}, DealOfTheDay> {
 
     render() {
         if(this.state) {

@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Stripe, StripeElements } from '@stripe/stripe-js';
 import {ElementsConsumer, CardElement} from '@stripe/react-stripe-js';
 import CardSection from './CardSection';
+
+/** 
+ * Different states the submission can be in
+ */
+enum SubmissionStatus {
+    NotSubmitted,
+    Submitting,
+    SubmissionSucceeded,
+    SubmissionFailed
+}
 
 interface CheckoutFormProps {
     stripe: Stripe | null;
@@ -9,90 +19,164 @@ interface CheckoutFormProps {
 }
 
 interface CheckoutFormState {
-    paymentSubmitted: boolean;
+    submissionStatus: SubmissionStatus;
     errorMessage: string | null;
 }
 
-interface ClientSecret {
-    client_secret: string;
-}
+/** Error message user will see if a more specific error message doesn't exist */
+const DEFAULT_ERROR_MESSAGE = "Something went wrong, please refresh this page and try again";
 
-class CheckoutForm extends React.Component<CheckoutFormProps, CheckoutFormState> {
-    state = {paymentSubmitted: false,
-             errorMessage: null};
+/**
+ * Form shown to user to take their billing information and show them progress, success, and error
+ * states.
+ */
+class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
 
-    handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        // We don't want to let default form submission happen here,
-        // which would refresh the page.
-        event.preventDefault();
+    /**
+     * Initializes state for the CheckoutForm
+     */
+    constructor(props: CheckoutFormProps) {
+        super(props);
 
-        // Proceed only if Stripe.js has loaded
-        // TODO: Make sure to disable form submission until Stripe.js has loaded.
-        if (this.props.stripe && this.props.elements) {
-            const stripe = this.props.stripe;
-            const elements = this.props.elements;
+        this.state = {submissionStatus: SubmissionStatus.NotSubmitted,
+                      errorMessage: null};
+        this.processSubmission = this.processSubmission.bind(this);
+    }
 
-            this.setState({paymentSubmitted: true});
-
-            fetch('/api/secret')
-            .then(
-                function(response: Response) {
-                    if (response.status === 200) {
-                        console.log("Talked to server");
-                        console.log(response);
-
-                        response.json().then(async function(data: ClientSecret) {
-                            console.log(data.client_secret);
-
-                            // TODO: stripe.confirmCardPayment may take several seconds to complete.
-                            // During that time, disable your form from being resubmitted and show a
-                            // waiting indicator like a spinner. If you receive an error, show it to the customer,
-                            // re-enable the form, and hide the waiting indicator.
-                            let card = elements.getElement(CardElement);
-                            if(card) {
-                                const result = await stripe.confirmCardPayment(data.client_secret, {
-                                    payment_method: {
-                                        card: card,
-                                        billing_details: {
-                                            name: 'Jenny Rosen',
-                                        },
-                                    }
-                                });
-                    
-                                if (result.error) {
-                                    // Show error to your customer (e.g., insufficient funds)
-                                    console.log(result.error.message);
-                                } else {
-                                    // The payment has been processed!
-                                    if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                                        // Show a success message to your customer
-                                        // There's a risk of the customer closing the window before callback
-                                        // execution. Set up a webhook or plugin to listen for the
-                                        // payment_intent.succeeded event that handles any business critical
-                                        // post-payment actions.
-                                        console.log("Payment succeeded!")
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }
-            )
-            .catch()
+    /**
+     * Async returns the client secret from the server for the deal of the day.
+     * 
+     * @returns client secret
+     * @throws if non-200 status code is returned by server
+     */
+    async fetchClientSecret(): Promise<string> {
+        let response: Response = await fetch('/api/secret');
+        if(response.status === 200) {
+            return (await response.json())['client_secret'];
+        } else {
+            throw Error("Unable to fetch client secret, got response code: " + response.status);
         }
     }
 
-    disableConfirmationButton(): boolean {
-        return this.state.paymentSubmitted || !this.props.stripe;
+    /**
+     * Handles the button press by processing a payment submission
+     * 
+     * @param event submission event from button
+     */
+    async processSubmission(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        // Only process payment submission if Stripe.js has loaded
+        if(this.props.stripe && this.props.elements) {
+            
+            // If card element is in the view hierarchy
+            let card = this.props.elements.getElement(CardElement);
+            if(card) {
+                this.setState({submissionStatus: SubmissionStatus.Submitting});
+
+                try {
+                    let clientSecret = await this.fetchClientSecret();
+
+                    console.log("clientSecret received");
+
+                    const result = await this.props.stripe.confirmCardPayment(clientSecret, {
+                        payment_method: {
+                            card: card,
+                            billing_details: {
+                                name: 'Jenny Rosen',
+                            },
+                        }
+                    });
+
+                    // Error
+                    if (result.error) {
+                        let errorMessage = result.error.message || DEFAULT_ERROR_MESSAGE;
+                        this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                                    errorMessage: errorMessage});
+
+                        console.log(errorMessage);
+                    }
+                    // Success!
+                    else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                        this.setState({submissionStatus: SubmissionStatus.SubmissionSucceeded});
+                    }
+                    // Something else went wrong despite there being no error
+                    else {
+                        this.setGenericPaymentFailure();
+                    }
+                } catch(err) {
+                    this.setGenericPaymentFailure();
+                    console.log("Catch clause of process submission reached, error: " + err);
+                }
+            }
+            // Unable to fetch card element 
+            else {
+                this.setGenericPaymentFailure();
+            }
+        }
+        // Stripe.js wasn't initialized for some reason
+        else {
+            this.setGenericPaymentFailure();
+        }
+    } 
+
+    /**
+     * Catch all error when something goes wrong in processing the payment
+     */
+    setGenericPaymentFailure() {
+        this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                       errorMessage: DEFAULT_ERROR_MESSAGE});
     }
 
+    /**
+     * Renders the UI for this component
+     */
     render() {
-        return (
-            <form onSubmit={this.handleSubmit}>
-                <CardSection />
-                <button disabled={this.disableConfirmationButton()}>Confirm order</button>
-            </form>
-        );
+        // If Stripe.JS hasn't initialized yet, don't show any payment UI
+        if(!this.props.stripe || !this.props.elements) {
+            return (
+                <div>
+                    One moment...
+                </div>
+            );
+        }
+        // Otherwise render UI based on submission status
+        else {
+            switch(this.state.submissionStatus) {
+                case SubmissionStatus.NotSubmitted:
+                    return (
+                        <form onSubmit={this.processSubmission}>
+                            <CardSection visible={true}/>
+                            <button>Confirm order</button>
+                        </form>
+                    );
+                case SubmissionStatus.Submitting:
+                    // It's essential that the form and card section remain in the
+                    // view hierarchy when submitting such that getElement(CardElement)
+                    // call can find the card element succesfully. However, we don't
+                    // want the user to see it, so hide it visually.
+                    return (
+                        <form>
+                            <CardSection visible={false}/>
+                            <div>One moment...</div>
+                        </form>
+                    );
+                case SubmissionStatus.SubmissionSucceeded:
+                    return (
+                        <div>
+                            Purchased
+                        </div>
+                    );
+                case SubmissionStatus.SubmissionFailed:
+                    return (
+                        <form onSubmit={this.processSubmission}>
+                            <div>{this.state.errorMessage}</div>
+                            <CardSection visible={true}/>
+                            <button>Confirm order</button>
+                        </form>
+                    );
+            }
+        }
     }
 }
 
@@ -100,7 +184,7 @@ export default function InjectedCheckoutForm() {
     return (
         <ElementsConsumer>
             {({stripe, elements}) => (
-                <CheckoutForm  stripe={stripe} elements={elements} />
+                <CheckoutForm stripe={stripe} elements={elements} />
             )}
         </ElementsConsumer>
     );
