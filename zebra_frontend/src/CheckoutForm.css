@@ -1,0 +1,101 @@
+input {
+    color: #32325d;
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-input-placeholder: #aab7c4;
+    border-radius: 4px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    transition: box-shadow 150ms ease;
+    width: 100%;
+}
+
+select {
+    color: #32325d;
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-input-placeholder: #aab7c4;
+    border-radius: 4px;
+    padding: 10px 12px;
+    background-color: white;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    transition: box-shadow 150ms ease;
+    width: 100%;
+    height: 40px;
+}
+
+.CheckoutForm-row {
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 4px;
+    width: 500px;
+}
+
+.CheckoutForm-label {
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 16px;
+    width: 15%;
+    min-width: 70px;
+    padding: 11px 0;
+    color: #c4f0ff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.CheckoutForm-button {
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    display: block;
+    width: 100%;
+    height: 40px;
+    margin: 15px 0;
+    background-color: white;
+    box-shadow: 0 6px 9px rgba(50, 50, 93, 0.06), 0 2px 5px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 #ffb9f6;
+    border-radius: 4px;
+    color: black;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/**
+* Shows how you can use CSS to style your Element's container.
+* These classes are added to your Stripe Element by default.
+* You can override these classNames by using the options passed
+* to the CardElement component.
+* https://stripe.com/docs/js/elements_object/create_element?type=card#elements_create-options-classes
+*/
+
+.StripeElement {
+    height: 40px;
+    padding: 10px 12px;
+    width: 100%;
+    color: #32325d;
+    background-color: white;
+    border: 1px solid transparent;
+    border-radius: 4px;
+  
+    box-shadow: 0 1px 3px 0 #e6ebf1;
+    -webkit-transition: box-shadow 150ms ease;
+    transition: box-shadow 150ms ease;
+  }
+  
+  .StripeElement--focus {
+    box-shadow: 0 1px 3px 0 #cfd7df;
+  }
+  
+  .StripeElement--invalid {
+    border-color: #fa755a;
+  }
+  
+  .StripeElement--webkit-autofill {
+    background-color: #fefde5 !important;
+  }

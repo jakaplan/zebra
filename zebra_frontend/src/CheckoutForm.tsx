@@ -1,7 +1,28 @@
 import React, { Component } from 'react';
 import { Stripe, StripeElements } from '@stripe/stripe-js';
 import {ElementsConsumer, CardElement} from '@stripe/react-stripe-js';
-import CardSection from './CardSection';
+import './CheckoutForm.css';
+
+/**
+ * Styling elements for the CardElement which takes in credit card payment info
+ */
+const CARD_ELEMENT_OPTIONS = {
+    style: {
+        base: {
+            color: "#32325d",
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: "antialiased",
+            fontSize: "16px",
+            "::placeholder": {
+                color: "#aab7c4",
+        }
+    },
+        invalid: {
+            color: "#fa755a",
+            iconColor: "#fa755a",
+        }
+    },
+};
 
 /** 
  * Different states the submission can be in
@@ -20,7 +41,12 @@ interface CheckoutFormProps {
 
 interface CheckoutFormState {
     submissionStatus: SubmissionStatus;
-    errorMessage: string | null;
+    errorMessage?: string;
+    name: string;
+    email: string;
+    address: string;
+    city: string;
+    state: string;
 }
 
 /** Error message user will see if a more specific error message doesn't exist */
@@ -39,8 +65,13 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
         super(props);
 
         this.state = {submissionStatus: SubmissionStatus.NotSubmitted,
-                      errorMessage: null};
+                      name: '',
+                      email: '',
+                      address: '',
+                      city: '',
+                      state: ''};
         this.processSubmission = this.processSubmission.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     /**
@@ -63,62 +94,105 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
      * 
      * @param event submission event from button
      */
-    async processSubmission(event: React.FormEvent<HTMLFormElement>) {
+    async processSubmission(event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) {
         event.preventDefault();
 
         // Only process payment submission if Stripe.js has loaded
         if(this.props.stripe && this.props.elements) {
-            
-            // If card element is in the view hierarchy
-            let card = this.props.elements.getElement(CardElement);
-            if(card) {
-                this.setState({submissionStatus: SubmissionStatus.Submitting});
 
-                try {
-                    let clientSecret = await this.fetchClientSecret();
+            // Validate input for the non-payment fields
+            if(this.validateInput()) {
+                // If card element is in the view hierarchy
+                let card = this.props.elements.getElement(CardElement);
+                if(card) {
+                    // Update state to reflect we're going to be submitting the payment info
+                    this.setState({submissionStatus: SubmissionStatus.Submitting});
 
-                    console.log("clientSecret received");
+                    try {
+                        let clientSecret = await this.fetchClientSecret();
 
-                    const result = await this.props.stripe.confirmCardPayment(clientSecret, {
-                        payment_method: {
-                            card: card,
-                            billing_details: {
-                                name: 'Jenny Rosen',
-                            },
+                        console.log("clientSecret received");
+
+                        const result = await this.props.stripe.confirmCardPayment(clientSecret, {
+                            payment_method: {
+                                card: card,
+                                billing_details: {
+                                    address: {
+                                        line1: this.state.address,
+                                        city: this.state.city,
+                                        state: this.state.state,
+                                        country: "US"
+                                    },
+                                    email: this.state.email,
+                                    name: this.state.name,
+                                },
+                            }
+                        });
+
+                        // Error
+                        if (result.error) {
+                            let errorMessage = result.error.message || DEFAULT_ERROR_MESSAGE;
+                            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                                        errorMessage: errorMessage});
+
+                            console.log(errorMessage);
                         }
-                    });
-
-                    // Error
-                    if (result.error) {
-                        let errorMessage = result.error.message || DEFAULT_ERROR_MESSAGE;
-                        this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
-                                    errorMessage: errorMessage});
-
-                        console.log(errorMessage);
-                    }
-                    // Success!
-                    else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
-                        this.setState({submissionStatus: SubmissionStatus.SubmissionSucceeded});
-                    }
-                    // Something else went wrong despite there being no error
-                    else {
+                        // Success!
+                        else if (result.paymentIntent && result.paymentIntent.status === 'succeeded') {
+                            this.setState({submissionStatus: SubmissionStatus.SubmissionSucceeded});
+                        }
+                        // Something else went wrong despite there being no error
+                        else {
+                            this.setGenericPaymentFailure();
+                        }
+                    } catch(err) {
                         this.setGenericPaymentFailure();
+                        console.log("Catch clause of process submission reached, error: " + err);
                     }
-                } catch(err) {
-                    this.setGenericPaymentFailure();
-                    console.log("Catch clause of process submission reached, error: " + err);
                 }
-            }
-            // Unable to fetch card element 
-            else {
-                this.setGenericPaymentFailure();
+                // Unable to fetch card element 
+                else {
+                    this.setGenericPaymentFailure();
+                }
             }
         }
         // Stripe.js wasn't initialized for some reason
         else {
             this.setGenericPaymentFailure();
         }
-    } 
+    }
+
+    validateInput(): boolean {
+        let allInputsPassedValidation = true;
+
+        if(!this.state.name) {
+            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                           errorMessage: "Please provide your name"});
+            allInputsPassedValidation = false;
+        }
+        else if(!this.state.email) {
+            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                           errorMessage: "Please provide your email"});
+            allInputsPassedValidation = false;
+        }
+        else if(!this.state.address) {
+            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                           errorMessage: "Please provide your address"});
+            allInputsPassedValidation = false;
+        }
+        else if(!this.state.city) {
+            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                           errorMessage: "Please provide your city"});
+            allInputsPassedValidation = false;
+        }
+        else if(!this.state.state) {
+            this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
+                           errorMessage: "Please provide your city"});
+            allInputsPassedValidation = false;
+        }
+
+        return allInputsPassedValidation;
+    }
 
     /**
      * Catch all error when something goes wrong in processing the payment
@@ -129,11 +203,43 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
     }
 
     /**
+     * Updates React's state based on what's been input into the input fields
+     */
+    handleInputChange(event: React.FormEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) {
+        console.log(event.currentTarget);
+
+        const name = event.currentTarget.name;
+        const value = event.currentTarget.value;
+
+        switch(name) {
+            case 'name':
+                this.setState({name: value});
+                break;
+            case 'email':
+                    this.setState({email: value});
+                    break;
+            case 'address':
+                    this.setState({address: value});
+                    break;
+            case 'city':
+                    this.setState({city: value});
+                    break;
+            case 'state':
+                    this.setState({state: value});
+                    break;
+        }
+    }
+
+    /**
      * Renders the UI for this component
      */
     render() {
+        console.log("Submission Status: " + this.state.submissionStatus);
+        //console.log("Name: " + this.state.name);
+
         // If Stripe.JS hasn't initialized yet, don't show any payment UI
         if(!this.props.stripe || !this.props.elements) {
+            console.log("render :: Stripe.JS hasn't initialized yet")
             return (
                 <div>
                     One moment...
@@ -142,40 +248,133 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
         }
         // Otherwise render UI based on submission status
         else {
-            switch(this.state.submissionStatus) {
-                case SubmissionStatus.NotSubmitted:
-                    return (
-                        <form onSubmit={this.processSubmission}>
-                            <CardSection visible={true}/>
-                            <button>Confirm order</button>
-                        </form>
-                    );
-                case SubmissionStatus.Submitting:
-                    // It's essential that the form and card section remain in the
-                    // view hierarchy when submitting such that getElement(CardElement)
-                    // call can find the card element succesfully. However, we don't
-                    // want the user to see it, so hide it visually.
-                    return (
-                        <form>
-                            <CardSection visible={false}/>
-                            <div>One moment...</div>
-                        </form>
-                    );
-                case SubmissionStatus.SubmissionSucceeded:
-                    return (
-                        <div>
-                            Purchased
-                        </div>
-                    );
-                case SubmissionStatus.SubmissionFailed:
-                    return (
-                        <form onSubmit={this.processSubmission}>
-                            <div>{this.state.errorMessage}</div>
-                            <CardSection visible={true}/>
-                            <button>Confirm order</button>
-                        </form>
-                    );
+            let status = this.state.submissionStatus;
+            
+            // Determine whether to show a message and if so which one
+            let showMessage = (status !== SubmissionStatus.NotSubmitted) ? 'block' : 'none';
+            let message : string | undefined;
+            if(status === SubmissionStatus.SubmissionFailed) {
+                message = this.state.errorMessage;
             }
+            else if(status === SubmissionStatus.Submitting) {
+                message = "Processing...";
+            }
+            else if(status === SubmissionStatus.SubmissionSucceeded) {
+                message = "Thanks for purchasing!";
+            }
+
+            // Determine if the form should be shown
+            let displayForm = (status === SubmissionStatus.NotSubmitted ||
+                               status === SubmissionStatus.SubmissionFailed) ? 'block' : 'none';
+
+            return (
+                <div>
+                    <div style={{display: showMessage}}>{message}</div>
+
+                    <form onSubmit={this.processSubmission} style={{display: displayForm}}>
+                        <div className="CheckoutForm-row">
+                            <input type="text" 
+                                   className="CheckoutForm-name"
+                                   name="name"
+                                   value={this.state.name}
+                                   onChange={this.handleInputChange}
+                                   placeholder="Name"/>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <input type="email"
+                                   className="CheckoutForm-email"
+                                   name="email"
+                                   value={this.state.email}
+                                   onChange={this.handleInputChange}
+                                   placeholder="Email"/>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <input type="text"
+                                   className="CheckoutForm-address"
+                                   name="address"
+                                   value={this.state.address}
+                                   onChange={this.handleInputChange}
+                                   placeholder="Address"/>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <input type="text"
+                                   className="CheckoutForm-city"
+                                   name="city"
+                                   value={this.state.city}
+                                   onChange={this.handleInputChange}
+                                   placeholder="City"/>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <select name="state"
+                                    value={this.state.state}
+                                    onChange={this.handleInputChange}>
+                                <option>Alabama</option>
+                                <option>Alaska</option>
+                                <option>Arizona</option>
+                                <option>Arkansas</option>
+                                <option>California</option>
+                                <option>Colorado</option>
+                                <option>Connecticut</option>
+                                <option>Delaware</option>
+                                <option>Florida</option>
+                                <option>Georgia</option>
+                                <option>Hawaii</option>
+                                <option>Idaho</option>
+                                <option>Illinois</option>
+                                <option>Indiana</option>
+                                <option>Iowa</option>
+                                <option>Kansas</option>
+                                <option>Kentucky</option>
+                                <option>Louisiana</option>
+                                <option>Maine</option>
+                                <option>Maryland</option>
+                                <option>Massachusetts</option>
+                                <option>Michigan</option>
+                                <option>Minnesota</option>
+                                <option>Mississippi</option>
+                                <option>Missouri</option>
+                                <option>Montana</option>
+                                <option>Nebraska</option>
+                                <option>Nevada</option>
+                                <option>New Hampshire</option>
+                                <option>New Jersey</option>
+                                <option>New Mexico</option>
+                                <option>New York</option>
+                                <option>North Carolina</option>
+                                <option>North Dakota</option>
+                                <option>Ohio</option>
+                                <option>Oklahoma</option>
+                                <option>Oregon</option>
+                                <option>Pennsylvania</option>
+                                <option>Rhode Island</option>
+                                <option>South Carolina</option>
+                                <option>South Dakota</option>
+                                <option>Tennessee</option>
+                                <option>Texas</option>
+                                <option>Utah</option>
+                                <option>Vermont</option>
+                                <option>Virginia</option>
+                                <option>Washington</option>
+                                <option>West Virginia</option>
+                                <option>Wisconsin</option>
+                                <option>Wyoming</option>
+                            </select>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <CardElement options={CARD_ELEMENT_OPTIONS}/>
+                        </div>
+
+                        <div className="CheckoutForm-row">
+                            <button className="CheckoutForm-button">Confirm order</button>
+                        </div>
+                    </form>
+                </div>
+            );
         }
     }
 }
