@@ -19,6 +19,23 @@ app.listen(port, () => console.log(`API server now running at http://localhost:$
 const stripe = require('stripe')(argv.key);
 const transactionLog = initializeTransactionLog();
 
+// Holds information about a transaction prior while it's in flight until recorded
+// to the transaction log. Gets purged periodically of transactions that never
+// completed in order to prevent a memory leak.
+const transactionCache = new Map();
+
+// Every minute check for all transactions records that have been pending for more than 30 minutes
+setInterval(removeOldTransactionCacheEntries, 60000);
+function removeOldTransactionCacheEntries() {
+    now = Date.now();
+    transactionCache.forEach(function(id, transactionRecord) {
+        // If it's been over 30 minutes, remove the transaction record
+        if (transactionRecord.date + (30 * 60 * 1000) < now) {
+            transactionCache.delete(id);
+        }
+    })
+}
+
 // GET endpoint to retrieve the deal of the day
 app.get('/api/dotd', function(req, res) {
     res.json({name: dotdName,
@@ -48,23 +65,30 @@ app.post('/api/begin_payment', bodyParser.raw({type: 'application/json'}), async
     });
 
     console.log("intent created, client_secret: " + intent.client_secret);
+    console.log("intent created, id: " + intent.id);
+
+    // Record in transaction cache
+    transactionCache.set(intent.id,{date: Date.now(),
+                                    product: dotdName,
+                                    price: dotdPrice,
+                                    name: name,
+                                    email: email,
+                                    address: address,
+                                    city: city,
+                                    state: state});
 
     res.json({client_secret: intent.client_secret});
 })
 
-// POST endpoint for webhook called by Stripe servers
+// POST endpoint for webhook called by Stripe servers (in development called via Stripe CLI)
 app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
-    console.log("webhook received");
-    
     let event;
     if(argv.endpoint_secret) {
-        console.log("checking webhook signature");
         const sig = req.headers['stripe-signature'];
         try {
             event = stripe.webhooks.constructEvent(req.body, sig, argv.endpoint_secret);
         }
         catch (err) {
-            console.log("webhook error");
             res.status(400).send(`Webhook Error: ${err.message}`);
         }
     } else {
@@ -75,50 +99,17 @@ app.post('/hooks', bodyParser.raw({type: 'application/json'}), (req, res) => {
           }
     }
 
-    // If a succesful payment occurred, record it in the transaction log
+    // If a successful payment occurred, record it in the transaction log
     if(event.type === 'payment_intent.succeeded') {
-        console.log('payment_intent.succeeded');
-        //console.log(event);
+        const id = event.data.object.id;
+        recordTransaction(id, transactionCache.get(id));
+        transactionCache.delete(id);
 
-
-        let client_secret = event.data.object.client_secret;
-        console.log("client_secret: " + event.data.object.client_secret);
-
+        console.log("Transaction succesfully completed, id: " + id);
     }
-
 
     // Return a response to acknowledge receipt of the event
     res.json({received: true});
-
-    /*
-    console.log("Event type: " + event.type);
-    console.log(event);
-
-    
-    transactionLog.write("Incoming webhook, event type is: " + event.type + '\n');
-
-    // Handle the event
-    switch (event.type) {
-        case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object;
-        // Then define and call a method to handle the successful payment intent.
-        // handlePaymentIntentSucceeded(paymentIntent);
-        break;
-        case 'payment_method.attached':
-        const paymentMethod = event.data.object;
-        // Then define and call a method to handle the successful attachment of a PaymentMethod.
-        // handlePaymentMethodAttached(paymentMethod);
-        break;
-        // ... handle other event types
-        default:
-        // Unexpected event type
-        return res.status(400).end();
-    }
-    */
-
-
-    //console.log(req);
-    //res.status(200).end()
 })
 
 function printServerStartupMessage() {
@@ -162,12 +153,31 @@ function initializeTransactionLog() {
         console.log("Created logs directory");
     }
 
+    // Determine if transaction log exists yet, if not when we create it we'll write
+    // column headers
+    let transactionLogExists = fs.existsSync('./logs/transactions.csv');
+
     // Open transaction log stream, by default stream will close when process terminates
-    logStream = fs.createWriteStream('./logs/transactions.txt', {flags: 'a'});
+    logStream = fs.createWriteStream('./logs/transactions.csv', {flags: 'a'});
+
+    // Write CSV header row
+    if(!transactionLogExists) {
+        logStream.write("id, date, product, price, name, email, address, city, state\n");
+    }
 
     return logStream;
 }
 
-function recordTransaction() {
-    //TODO
+function recordTransaction(id, transactionRecord) {
+    csvSafe = (str) => { return str.replace(/"/g, '""').replace(/,/g, '","')};
+
+    logStream.write(csvSafe(id) + ',' +
+                    transactionRecord.date + ',' +
+                    csvSafe(transactionRecord.product) + ',' +
+                    transactionRecord.price + ',' +
+                    csvSafe(transactionRecord.name) + ',' +
+                    csvSafe(transactionRecord.email) + ',' +
+                    csvSafe(transactionRecord.address) + ',' +
+                    csvSafe(transactionRecord.city) + ',' +
+                    csvSafe(transactionRecord.state) + '\n');
 }
