@@ -18,9 +18,10 @@ To run this locally you'll need to:
     - Note: API server (`zebra-backend`) runs on port 5000 and listens for Stripe webhooks at `\hooks`
  7. Optionally note down the webhook signing secret the Stripe CLI outputs
     - If you don't provide the API server with the signing secret it'll still function, but won't verify validatity of web hook calls it receives
- 8. Set `STRIPE_API_KEY` environment variable to the secret key value you got in step 2
+ 8. Open a terminal and set `STRIPE_API_KEY` environment variable to the secret key value you got in step 2
     - The specifics of this vary by operating system, on macOS you can do this with: `export STRIPE_API_KEY=<key_value>`
  9. Optionally set `STRIPE_ENDPOINT_SECRET` environment variable to the secret key value you got in step 7
- 10. Start the API server in a terminal by navigating to the `zebra-backend` folder and typing `npm run start`
- 11. Start the web server in a terminal by navigating to the `zebra-frontend` folder and typing `npm run start`
+ 10. Start the API server in the terminal by navigating to the `zebra-backend` folder and typing `npm run start`
+ 11. In a new terminal window set `REACT_APP_PUBLISHABLE_KEY` to the publishable key you got in step 2
+ 12. Start the web server in the terminal by navigating to the `zebra-frontend` folder and typing `npm run start`
      - Your browser should automatically open up the web client, but if it doesn't navigate to http://localhost:3000
