@@ -2,10 +2,14 @@
 
 A faux e-commerce site using Stripe's payment APIs to offer a daily deal for a striped item (e.g. candy canes). Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
 
+This codebase consists of two parts:
+ - `zebra_frontend` which is a React web client written in TypeScript/TSX and CSS
+ - `zebra_backend` which is a Node server acting as the API backend for the web client written in TypeScript
+
 ## Running locally
 To try this out you'll need to have three pieces up and running:
- - Web server (`zebra_frontend`) which hosts the web client for the e-commerce site
- - API server (`zebra_backend`) which the web client talks to retrieve the deal of the day and processes payments
+ - Web server (`zebra_frontend`)
+ - API server (`zebra_backend`)
  - [Stripe CLI](https://stripe.com/docs/stripe-cli) which locally sends Stripe webhook calls to the API server
 
 ### First run instructions
