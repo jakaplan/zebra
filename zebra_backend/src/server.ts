@@ -4,7 +4,7 @@ import express, {Request, Response} from "express";
 import bodyParser from "body-parser";
 
 /**
- * Record of information about a transaction which will be record upon a succesful payment
+ * Record of information about a transaction which will be recorded upon a succesful payment
  */
 interface TransactionRecord {
     id: string;
@@ -29,7 +29,7 @@ interface EnvironmentVariables {
 // Deal of the day (values hardcoded for this example)
 const dotdName = 'Candy Cane';
 const dotdDescription = 'Peppermint flavored Christmas treat with white and red stripes';
-const dotdImageURL = 'https://upload.wikimedia.org/wikipedia/commons/d/de/Candy-Cane-Classic.jpg';
+const dotdImageURL = 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Candy_stick_icon.png';
 const dotdPrice = 249;
 const dotdCurrency = 'usd';
 

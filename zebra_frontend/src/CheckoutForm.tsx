@@ -15,8 +15,8 @@ const CARD_ELEMENT_OPTIONS = {
             fontSize: "16px",
             "::placeholder": {
                 color: "#aab7c4",
-        }
-    },
+            }
+        },
         invalid: {
             color: "#fa755a",
             iconColor: "#fa755a",
@@ -50,7 +50,7 @@ interface CheckoutFormState {
 }
 
 /** Error message user will see if a more specific error message doesn't exist */
-const DEFAULT_ERROR_MESSAGE = "Something went wrong, please refresh this page and try again";
+const DEFAULT_ERROR_MESSAGE = "Something went wrong, please try again";
 
 /**
  * Form shown to user to take their billing information and show them progress, success, and error
@@ -92,9 +92,11 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
                 city: this.state.city,
                 state: this.state.state })
         });
+        
         if(response.status === 200) {
             return (await response.json())['client_secret'];
-        } else {
+        }
+        else {
             throw Error("Unable to fetch client secret, got response code: " + response.status);
         }
     }
@@ -259,6 +261,7 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
             
             // Determine whether to show a message and if so which one
             let showMessage = (status !== SubmissionStatus.NotSubmitted) ? 'block' : 'none';
+            let messageColor = (status === SubmissionStatus.SubmissionFailed) ? 'red' : 'white';
             let message : string | undefined;
             if(status === SubmissionStatus.SubmissionFailed) {
                 message = this.state.errorMessage;
@@ -276,7 +279,9 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
 
             return (
                 <div>
-                    <div style={{display: showMessage}}>{message}</div>
+                    <div className="CheckoutForm-error" style={{display: showMessage, color: messageColor}}>
+                        {message}
+                    </div>
 
                     <form onSubmit={this.processSubmission} style={{display: displayForm}}>
                         <div className="CheckoutForm-row">
