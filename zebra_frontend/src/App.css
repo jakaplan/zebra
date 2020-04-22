@@ -30,3 +30,11 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.App-loading {
+  font-family: Helvetica Neue, Helvetica, sans-serif;
+  font-size: 30px;
+  text-align: center;
+  padding: 20px 0px 0px 0px;
+  width: 100%;
+}
