@@ -15,7 +15,7 @@ To run this locally you'll need to:
  4. If you don't have it installed, install [npm](https://www.npmjs.com/get-npm)
  5. Install [Stripe CLI](https://stripe.com/docs/stripe-cli) and link your account
  6. Start Stripe CLI with: `stripe listen --forward-to localhost:5000/hooks`
-    - Note: API server (`zebra-backend`) runs on port 5000 and listens for Stripe webhooks at `\hooks`
+    - Note: API server (`zebra-backend`) runs on port 5000 and listens for Stripe webhooks at `/hooks`
  7. Optionally note down the webhook signing secret the Stripe CLI outputs
     - If you don't provide the API server with the signing secret it'll still function, but won't verify validatity of web hook calls it receives
  8. Open a terminal and set `STRIPE_API_KEY` environment variable to the secret key value you got in step 2
