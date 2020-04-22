@@ -28,9 +28,9 @@ To try this out you'll need to have three pieces up and running:
  11. In a new terminal window set `REACT_APP_PUBLISHABLE_KEY` to the publishable key you got in step 2
  12. Install the dependencies for the web server by navigating to the `zebra_frontend` directory and typing `npm install`
  13. Once that's completed, start the web server by typing `npm run start`
-     - Your browser should automatically open up the web client, but if it doesn't navigate to http://localhost:3000
+     - Your browser should automatically open up the web client, but if it doesn't then navigate to http://localhost:3000
 
-If you make any changes to the frontend or backend, a best attempt will be made to automatically restart either server with the changes. Howeve, some types of errors may cause the restart to fail and stop retrying. If that happens restart either of them with `npm run start` and you'll be back in business.
+If you make any changes to the frontend or backend, a best attempt will be made to automatically restart either server with the changes. However, some types of errors may cause the restart to fail and stop retrying. If that happens restart either of them with `npm run start` and you'll be back in business.
 
 ### Subsequent run instructions
 If you close your terminal session (including restarting your computer), you'll need to set the environment variables again. On macOS you can check your environment variables by typing `printenv` in a terminal; instructions may vary across operating systems. As a reminder the environment variables used by `zebra` are:
