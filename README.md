@@ -1,6 +1,6 @@
 # zebra
 
-This implementation is a faux e-commerce site offering a daily deal for a striped item (e.g. candy canes). Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
+A faux e-commerce site using Stripe's payment APIs to offer a daily deal for a striped item (e.g. candy canes). Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
 
 ## Running locally
 To try this out you'll need to have three pieces up and running:
