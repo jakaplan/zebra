@@ -45,7 +45,7 @@ If you close your terminal session (including restarting your computer), you'll 
  3. In a new terminal, if needed set `REACT_APP_PUBLISHABLE_KEY` environment variable and then in the `zebra_frontend` directory type `npm run start`
      
 ## Validating
-Beyond seeing error states or a succesful purchase in the web client, you can confirm a successful order has been received by the server by checking the transaction log. The transaction log is a CSV file that is located at `\zebra\zebra-backend\logs\transactions.csv`.
+Beyond seeing error states or a succesful purchase in the web client, you can confirm a successful order has been received by the server by checking the transaction log. The transaction log is a CSV file that is located at `/zebra/zebra-backend/logs/transactions.csv`.
 
 ### A note on CSVs
 CSV isn't exactly a consistent standard, particularly when it comes to escaping double quote marks and commas. The CSV encoding used here escapes commas by putting them inside of a pair of quotation marks and escape quotation marks by prefixing them with another quotation mark. Many CSV parsers such as [macOS's Quick Look](https://support.apple.com/guide/mac-help/view-and-edit-files-with-quick-look-mh14119/mac) use this format, but not all may (at least by default).
