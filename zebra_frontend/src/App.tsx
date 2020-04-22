@@ -40,33 +40,32 @@ class App extends Component<{}, AppState> {
 
     render() {
         if(this.state.dealOfTheDayInfoFetched) {
-        let buyNow: string = "Buy now for $" + this.state.price / 100;  
+            let buyNow: string = "Buy now for $" + this.state.price / 100;  
 
-          return (
-            <div className="App">
-                <header className="App-header">
-                    <h2>Your Striped Deal of the Day</h2>
-                    <DealOfTheDay name={this.state.name}
-                                  description={this.state.description}
-                                  imageUrl={this.state.imageUrl}
-                                  price={this.state.price}/>
-                    {this.state.showCheckoutForm ?
-                        <CheckoutForm/> :
-                        <button className="App-button" onClick={this.handleButtonClick}>{buyNow}</button>}
-                </header>
-            </div>
-          );
+            return (
+                <div className="App">
+                    <header className="App-header">
+                        <h2>Your Striped Deal of the Day</h2>
+                        <DealOfTheDay name={this.state.name}
+                                      description={this.state.description}
+                                      imageUrl={this.state.imageUrl}/>
+                        {this.state.showCheckoutForm ?
+                            <CheckoutForm/> :
+                            <button className="App-button" onClick={this.handleButtonClick}>{buyNow}</button>}
+                    </header>
+                </div>
+            );
         }
         else
         {
-          return (
-            <div className="App">
-                <header className="App-header">
-                    <h2>Your Striped Deal of the Day</h2>
-                    <div className="App-loading">Loading...</div>
-                </header>
-            </div>
-          );
+            return (
+                <div className="App">
+                    <header className="App-header">
+                        <h2>Your Striped Deal of the Day</h2>
+                        <div className="App-loading">Loading...</div>
+                    </header>
+                </div>
+            );
         }
 
     }

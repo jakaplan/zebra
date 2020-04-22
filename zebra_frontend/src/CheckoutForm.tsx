@@ -172,10 +172,8 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
         }
     }
 
-
-
     /**
-     * Catch all error when something goes wrong in processing the payment
+     * Catch all user messaging when something goes wrong in processing the payment
      */
     setGenericPaymentFailure() {
         this.setState({submissionStatus: SubmissionStatus.SubmissionFailed,
@@ -218,7 +216,7 @@ class CheckoutForm extends Component<CheckoutFormProps, CheckoutFormState> {
     }
 
     /**
-     * Updates React's state based on what's been input into the input fields
+     * Updates React's state based on what's been input into the input/select elements
      */
     handleInputChange(event: React.FormEvent<HTMLInputElement> | React.ChangeEvent<HTMLSelectElement>) {
         const name = event.currentTarget.name;

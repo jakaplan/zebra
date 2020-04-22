@@ -4,15 +4,12 @@ import './DealOfTheDay.css';
 interface DealOfTheDayProps {
     name: string;
     description: string;
-    imageUrl: string; 
-    price: number;
+    imageUrl: string;
 }
 
 class DealOfTheDay extends Component<DealOfTheDayProps> {
 
     render() {
-        let priceStr: string = "$" + this.props.price / 100;
-
         return (
             <div className="DealOfTheDay">
                 <img className="DealImage" src={this.props.imageUrl} alt={this.props.description} />
