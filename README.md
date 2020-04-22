@@ -13,7 +13,7 @@ To try this out you'll need to have three pieces up and running:
 ### First run instructions
  1. If you don't already have one, create a [Stripe developer account](https://dashboard.stripe.com/register)
  2. After verifying your account, note down your test publishable and secret keys from your [dashboard](https://dashboard.stripe.com/test/apikeys)
- 3. Checkout this git repo: `git clone https://github.com/jakaplan/zebra.git`
+ 3. Clone this git repo: `git clone https://github.com/jakaplan/zebra.git`
  4. If you don't have it installed, install [npm](https://www.npmjs.com/get-npm)
  5. Install [Stripe CLI](https://stripe.com/docs/stripe-cli) and link your account
  6. Start Stripe CLI with: `stripe listen --forward-to localhost:5000/hooks`
