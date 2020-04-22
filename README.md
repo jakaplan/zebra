@@ -2,7 +2,7 @@
 
 Written project for Stripe PM interview.
 
-This implementation is a faux e-commerce site offering a daily deal for a striped item. Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
+This implementation is a faux e-commerce site offering a daily deal for a striped item (e.g. candy canes). Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
 
 ## Running locally
 To try this out you'll need to have three pieces up and running:
