@@ -39,10 +39,7 @@ const port = 5000;
 printServerStartupMessage();
 const envVars = checkEnvironmentVariables();
 app.listen(port, () => console.log(`\nAPI server now running at http://localhost:${port}`))
-
 const stripe = new Stripe(envVars.stripeAPIKey, {apiVersion: '2020-03-02', typescript: true});
-
-//const stripe = require('stripe')(process.env.STRIPE_API_KEY);
 const transactionLog = initializeTransactionLog();
 
 // Holds information about a transaction prior while it's in flight until recorded
