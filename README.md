@@ -38,7 +38,7 @@ If you make any changes to the frontend or backend, a best attempt will be made 
 If you close your terminal session (including restarting your computer), you'll need to set the environment variables again. On macOS you can check your environment variables by typing `printenv` in a terminal; instructions may vary across operating systems. As a reminder the environment variables used by `zebra` are:
  - `STRIPE_API_KEY` - _required_ secret key accessed at https://dashboard.stripe.com/test/apikeys
  - `STRIPE_ENDPOINT_SECRET` - _optional_ output by Stripe CLI after it starts
- - `REACT_APP_PUBLISHABLE_KEY` - _required_ - publishable key accessed at https://dashboard.stripe.com/test/apikeys
+ - `REACT_APP_PUBLISHABLE_KEY` - _required_ publishable key accessed at https://dashboard.stripe.com/test/apikeys
  
  For subsequent runs:
  1. Start Stripe CLI with: `stripe listen --forward-to localhost:5000/hooks`
