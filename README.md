@@ -6,8 +6,8 @@ This implementation is a faux e-commerce site offering a daily deal for a stripe
 
 ## Getting started
 To try this out you'll need to have three pieces up and running:
- - Web server (`zebra-frontend`) which hosts the web client for the e-commerce site
- - API server (`zebra-backend`) which the web client talks to to find out about the deal of the day and processes payments
+ - Web server (`zebra_frontend`) which hosts the web client for the e-commerce site
+ - API server (`zebra_backend`) which the web client talks to to find out about the deal of the day and processes payments
  - [Stripe CLI](https://stripe.com/docs/stripe-cli) which locally sends Stripe webhook calls to the API server
 
 To run this locally:
@@ -17,15 +17,15 @@ To run this locally:
  4. If you don't have it installed, install [npm](https://www.npmjs.com/get-npm)
  5. Install [Stripe CLI](https://stripe.com/docs/stripe-cli) and link your account
  6. Start Stripe CLI with: `stripe listen --forward-to localhost:5000/hooks`
-    - Note: API server (`zebra-backend`) runs on port 5000 and listens for Stripe webhooks at `/hooks`
+    - Note: API server (`zebra_backend`) runs on port 5000 and listens for Stripe webhooks at `/hooks`
  7. Optionally note down the webhook signing secret the Stripe CLI outputs
     - If you don't provide the API server with the signing secret it'll still function, but won't verify validatity of web hook calls it receives
  8. Open a terminal and set `STRIPE_API_KEY` environment variable to the secret key value you got in step 2
     - The specifics of this may vary by operating system, on macOS you can do this with: `export STRIPE_API_KEY=<key_value>`
  9. Optionally set `STRIPE_ENDPOINT_SECRET` environment variable to the secret key value you got in step 7
- 10. Start the API server in the terminal by navigating to the `zebra-backend` folder and typing `npm run start`
+ 10. Start the API server in the terminal by navigating to the `zebra_backend` folder and typing `npm run start`
  11. In a new terminal window set `REACT_APP_PUBLISHABLE_KEY` to the publishable key you got in step 2
- 12. Start the web server in the terminal by navigating to the `zebra-frontend` folder and typing `npm run start`
+ 12. Start the web server in the terminal by navigating to the `zebra_frontend` folder and typing `npm run start`
      - Your browser should automatically open up the web client, but if it doesn't navigate to http://localhost:3000
      
      
