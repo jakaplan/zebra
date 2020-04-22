@@ -23,9 +23,11 @@ To run this locally:
  8. Open a terminal and set `STRIPE_API_KEY` environment variable to the secret key value you got in step 2
     - The specifics of this may vary by operating system, on macOS you can do this with: `export STRIPE_API_KEY=<key_value>`
  9. Optionally set `STRIPE_ENDPOINT_SECRET` environment variable to the secret key value you got in step 7
- 10. Start the API server in the terminal by navigating to the `zebra_backend` folder and typing `npm run start`
+ 10. Install the dependencies for the API server by navigating to the `zebra_backend` folder, and typing `npm install`
+ 11. Once that's completed, start the API server by typing `npm run start`
  11. In a new terminal window set `REACT_APP_PUBLISHABLE_KEY` to the publishable key you got in step 2
- 12. Start the web server in the terminal by navigating to the `zebra_frontend` folder and typing `npm run start`
+ 12. Install the dependencies for the web server by navigating to the `zebra_frontend` folder and typing `npm install`
+ 13. Once that's completed, start the web server by typing `npm run start`
      - Your browser should automatically open up the web client, but if it doesn't navigate to http://localhost:3000
      
      
