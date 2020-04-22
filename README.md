@@ -1,6 +1,8 @@
 # zebra
 
-Written project for Stripe PM interview. This implementation is a faux e-commerce site offering a daily deal for a striped item. Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
+Written project for Stripe PM interview.
+
+This implementation is a faux e-commerce site offering a daily deal for a striped item. Think [woot!](https://en.wikipedia.org/wiki/Woot), but way more esoteric.
 
 ## Getting started
 To try this out you'll need to have three pieces up and running:
@@ -8,7 +10,7 @@ To try this out you'll need to have three pieces up and running:
  - API server (`zebra-backend`) which the web client talks to to find out about the deal of the day and processes payments
  - [Stripe CLI](https://stripe.com/docs/stripe-cli) which locally sends Stripe webhook calls to the API server
 
-To run this locally you'll need to:
+To run this locally:
  1. If you don't already have one, create a [Stripe developer account](https://dashboard.stripe.com/register)
  2. After verifying your account, note down your test publishable and secret keys from your [dashboard](https://dashboard.stripe.com/test/apikeys)
  3. Checkout this git repo
